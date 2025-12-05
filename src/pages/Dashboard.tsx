@@ -130,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, isDarkMode, toggl
   return (
     <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
+      {/* <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
         <div className="flex items-center gap-2 mb-10 text-emerald-500 font-bold tracking-wide">
            <div className="w-8 h-8 border-2 border-emerald-500 rounded flex items-center justify-center text-xs">D</div>
            Diprella
@@ -154,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, isDarkMode, toggl
         <button onClick={onLogout} className="flex items-center gap-3 w-full px-4 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg text-sm font-medium transition mt-auto">
             <LogOut size={18} /> Logout
         </button>
-      </aside>
+      </aside> */}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
