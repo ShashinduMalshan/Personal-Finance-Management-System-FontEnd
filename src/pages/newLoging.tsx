@@ -4,8 +4,9 @@ import InputField from '../Components/InputField';
 import WaveGraphic from '../Components/WaveGraphic';
 import { generateWelcomeMessage } from '../services/geminiService';
 import bgImage from "../assets/traxer-ayiCvp7Ta30-unsplash.jpg";
-import { login, registerUser }  from '../services/auth';
+import { getMyDetails, login, registerUser } from '../services/auth';
 import { useNavigate } from "react-router-dom"
+import { useAuth } from '../context/authContext';
 
 
 
@@ -14,6 +15,8 @@ import { useNavigate } from "react-router-dom"
 
 const newLoging: React.FC = () => {
     const navigate = useNavigate()
+    const { setUser } = useAuth()
+
 
     // isSignUpMode = true means the overlay is on the LEFT, showing the Register form on the RIGHT.
     // Wait, let's align with the user request:
@@ -25,71 +28,79 @@ const newLoging: React.FC = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [conformPassword ,setConformPassword] = useState('');
+    const [conformPassword, setConformPassword] = useState('');
     const [welcomeMessage, setWelcomeMessage] = useState('To keep connected with us please login with your personal info');
+    const { user } = useAuth();
 
 
-        const handleLogin = async (e: FormEvent) => {
-            e.preventDefault()
-    
-            console.log("Login clicked", { username, password })
-    
-            if (!username || !password) {
-                alert("Please enter username and password")
-                return
-            }
-    
-            try {
-                console.log("Attempting login...")
-                const res = await login(username, password)
-                console.log(res.data.accessToken)
-                await localStorage.setItem("accessToken", res.data.accessToken)
-                alert("Login successful")
-    
-                // const details = await getMyDetails()
-                // setUser(details.data)
-                navigate("/dashboard")
-    
-            } catch (error) {
-                console.log("Login failed", error)
-            }
+    const handleLogin = async (e: FormEvent) => {
+        e.preventDefault()
+
+        console.log("Login clicked", { username, password })
+
+        if (!username || !password) {
+            alert("Please enter username and password")
+            return
         }
 
+        try {
+            console.log("Attempting login...")
+            const res = await login(username, password)
 
-
-         const handleRegister = async (e: FormEvent) => {
-                e.preventDefault()
-        
-                console.log("Register clicked", { username, email, password })
-        
-                if (!username || !email || !password){
-                    alert("all feilds are required")
-                    return
-                }
-
-                if (password !== conformPassword){
-                    alert("passwords do not match")
-                    return
-                }
-                
-                try {
-        
-                    const obj = {username, email, password}
-                    console.log("Attempting register...")
-                    const res = await registerUser(obj)
-                    console.log(res);
-        
-                    alert("Register successful")
-                    navigate("/login")
-                } catch (error) {
-                    console.log("Register failed", error)
-                    alert("Register failed")
-        
-                }
+            if (!res.data.data.accessToken) {
+                alert("Login failed!")
+                return
             }
-        
-        
-    
+            await localStorage.setItem("accessToken", res.data.data.accessToken)
+            await localStorage.setItem("refreshToken", res.data.data.refreshToken)
+
+            const details = await getMyDetails()
+            setUser(details.data)
+            console.log("user " + user.username.charAt(0));
+
+
+            navigate("/dashboard")
+
+        } catch (error) {
+            console.log("Login failed", error)
+        }
+    }
+
+
+
+    const handleRegister = async (e: FormEvent) => {
+        e.preventDefault()
+
+        console.log("Register clicked", { username, email, password })
+
+        if (!username || !email || !password) {
+            alert("all feilds are required")
+            return
+        }
+
+        if (password !== conformPassword) {
+            alert("passwords do not match")
+            return
+        }
+
+        try {
+
+            const obj = { username, email, password }
+            console.log("Attempting register...")
+            const res = await registerUser(obj)
+            console.log(res);
+
+            alert("Register successful")
+            navigate("/login")
+        } catch (error) {
+            console.log("Register failed", error)
+            alert("Register failed")
+
+        }
+    }
+
+
+
 
     //   // Debounce for AI message
     useEffect(() => {
@@ -157,7 +168,7 @@ const newLoging: React.FC = () => {
                             <InputField name="conformPassword" type="password" placeholder="Conform Password" icon={Check} value={conformPassword} onChange={(e) => setConformPassword(e.target.value)} />
 
                             <button className="mt-6 bg-emerald-500 text-white font-bold py-3 px-10 rounded-full uppercase tracking-wider text-xs shadow-lg hover:bg-emerald-600 transition-transform active:scale-95"
-                                onClick={ handleRegister }> 
+                                onClick={handleRegister}>
                                 Sign Up
                             </button>
                         </form>
@@ -181,7 +192,7 @@ const newLoging: React.FC = () => {
                             <a href="#" className="text-xs text-gray-400 mt-4 mb-6 border-b border-transparent hover:border-gray-400 transition">Forgot your password?</a>
 
                             <button className="bg-emerald-500 text-white font-bold py-3 px-10 rounded-full uppercase tracking-wider text-xs shadow-lg hover:bg-emerald-600 transition-transform active:scale-95"
-                            onClick={ handleLogin }>
+                                onClick={handleLogin}>
                                 Sign In
                             </button>
                         </form>
@@ -235,3 +246,4 @@ const newLoging: React.FC = () => {
 };
 
 export default newLoging;
+

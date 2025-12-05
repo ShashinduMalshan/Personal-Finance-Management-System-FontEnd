@@ -141,7 +141,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, isDarkMode, toggl
                 <LayoutDashboard size={18} /> Dashboard
             </button>
             <button className="flex items-center gap-3 w-full px-4 py-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-sm font-medium transition">
-                <Users size={18} /> Customers
+                <Users size={18} /> Income Management
             </button>
             <button className="flex items-center gap-3 w-full px-4 py-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-sm font-medium transition">
                 <TrendingUp size={18} /> Analytics

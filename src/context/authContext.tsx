@@ -4,33 +4,33 @@ import { getMyDetails } from '../services/auth';
 const AuthContext = createContext<any>(null);
 
 export const AuthProvider = ({ children }: any) => {
-    const [user, setUSer] = useState<any>(null);
-    const [loadig, setLogding] = useState(true);
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('accessToken');
         if (token) {
             getMyDetails()
                 .then((res) => {
-                    setUSer(res.data);
+                    setUser(res.data.data);
                 })
                 .catch((err) => {
                     console.log(err);
-                    setUSer(null);
+                    setUser(null);
 
                 })
                 .finally(() => {
-                    setLogding(false);
+                    setLoading(false);
                 })
         } else {
-            setLogding(false);
-            setUSer(null);
+            setLoading(false);
+            setUser(null);
 
         }
     } ,[])
 
     return (
-        <AuthContext.Provider value={{ user, setUSer, loadig }}>
+        <AuthContext.Provider value={{ user, setUser, loading }}>
             {children}
         </AuthContext.Provider>
     )

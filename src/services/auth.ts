@@ -20,3 +20,8 @@ export const getMyDetails = async () => {
     const res = await api.get('/auth/me');
     return res;
 }
+
+export const dashboardData = async () => {
+    const res = await api.get('/dashboard');
+    return res;
+}
