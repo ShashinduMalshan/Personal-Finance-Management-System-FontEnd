@@ -34,7 +34,7 @@ export default function Router() {
     localStorage.setItem("theme", newMode ? "dark" : "light");
   };
 
-  if (loading) return <div>Loading user data...</div>;
+  // if (loading) return <div>Loading user data...</div>;
 
   return (
     <BrowserRouter>

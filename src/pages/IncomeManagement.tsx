@@ -16,71 +16,123 @@ export interface IncomeRecord {
   autoAdd?: boolean;
 }
 
-const CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other'] as const;
+const CATEGORIES = ["Salary", "Freelance", "Investment", "Gift", "Other"] as const;
 
 const IncomeManagement: React.FC = () => {
-  // Mock Data
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [incomes, setIncomes] = useState<IncomeRecord[]>([]);
-  //   { id: '1', source: 'Software Engineer Salary', amount: 5200, date: '2023-10-01', category: 'Salary', autoAdd: true },
-  //   { id: '2', source: 'Freelance Project - Web Design', amount: 1200, date: '2023-10-15', category: 'Freelance', autoAdd: false },
-  //   { id: '3', source: 'Birthday Gift', amount: 200, date: '2023-10-20', category: 'Gift', autoAdd: true },
-  // 
-  // ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const handleToggleAutoAdd = (id: string, currentValue: boolean) => {
-    setIncomes(prev =>
-      prev.map(income =>
-        income.id === id ? { ...income, autoAdd: !currentValue } : income
-      )
-    );
-    console.log("currentValue", id, currentValue);
+  const [formData, setFormData] = useState<Omit<IncomeRecord, "id">>({
+    source: "",
+    amount: 0,
+    date: new Date().toISOString().split("T")[0],
+    category: "Salary"
+  });
+
+const fetchIncomes = async (page: number = 1, limit: number = 20) => {
+  setLoading(true);
+  try {
+    const response = await getIncomes(page, limit);
+
+    const rawData = response.data.data || response.data;
+
+    const formattedData = rawData.map((item: any) => ({
+      ...item,
+      id: item._id, // map MongoDB _id to id
+      date: item.date ? item.date.split("T")[0] : ""
+    }));
+
+    setIncomes(formattedData);
+
+    
+  } catch (error) {
+    console.error("Error fetching income records:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  useEffect(() => {
+    fetchIncomes();
+  }, []);
+
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      await fetch("http://localhost:5000/api/v1/income/createIncomeRecord", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      await fetchIncomes();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving income:", error);
+    };
   };
 
 
-  // Modal State
-  useEffect(() => {
-  const fetchIncomes = async () => {
-    setLoading(true);
+    const handleUpdate = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      try {
+        await fetch(`http://localhost:5000/api/v1/income/updateIncomeRecord/${editingId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+
+        await fetchIncomes();
+        setIsModalOpen(false);
+      } catch (error) {
+        console.error("Error updating income:", error);
+      }
+    };
+  
+
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this record?")) return;
+
     try {
-      // 2. Use 'api' instead of 'fetch'
-      // This will call http://localhost:5000/api/v1/income/allIncomes
-      const response = await getIncomes();
+      await fetch(
+        `http://localhost:5000/api/v1/income/deleteIncomeRecord/${id}`,
+        { method: "DELETE" }
+      );
 
-      // 3. Map the data (Option A)
-      // Axios puts the response body in .data
-      const rawData = response.data.data || response.data; 
-      
-      const formattedData = rawData.map((item: any) => ({
-        ...item,
-        id: item._id, // Map MongoDB _id to your UI's id
-        date: item.date ? item.date.split('T')[0] : '' // Format date for <input type="date">
-      }));
-
-      setIncomes(formattedData);
+      await fetchIncomes(); // 🔄 reload
     } catch (error) {
-      console.error("Error fetching income records:", error);
-    } finally {
-      setLoading(false);
+      console.error("Delete failed:", error);
     }
   };
 
-  fetchIncomes();
-}, []);
+  const handleToggleAutoAdd = async (id: string, currentValue: boolean) => {
+    try {
+      await fetch(
+        "http://localhost:5000/api/v1/income/updateAutoAddIncome",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            autoAdd: !currentValue
+          })
+        }
+      );
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  // Form State
-  const [formData, setFormData] = useState<Omit<IncomeRecord, 'id'>>({
-    source: '',
-    amount: 0,
-    date: new Date().toISOString().split('T')[0],
-    category: 'Salary'
-  });
-
-  // Search State
-  const [searchTerm, setSearchTerm] = useState('');
+      await fetchIncomes(); // 🔄 reload
+    } catch (error) {
+      console.error("Failed to update autoAdd:", error);
+    }
+  };
 
   const handleOpenModal = (record?: IncomeRecord) => {
     if (record) {
@@ -100,24 +152,13 @@ const IncomeManagement: React.FC = () => {
         category: 'Salary'
       });
     }
-    setIsModalOpen(true);
+
+    setIsModalOpen(true); // open modal
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingId) {
-      setIncomes(prev => prev.map(item => item.id === editingId ? { ...formData, id: editingId } : item));
-    } else {
-      setIncomes(prev => [...prev, { ...formData, id: Date.now().toString() }]);
-    }
-    setIsModalOpen(false);
-  };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this record?')) {
-      setIncomes(prev => prev.filter(item => item.id !== id));
-    }
-  };
+
+
 
   const filteredIncomes = incomes.filter(income =>
     income.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -254,91 +295,92 @@ const IncomeManagement: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              {/* Source Field */}
+            <form onSubmit={editingId ? handleUpdate : handleSave} className="p-6 space-y-4">
+            {/* Source Field */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Source</label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  required
+                  type="text"
+                  placeholder="e.g. Google Salary"
+                  value={formData.source}
+                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Amount Field */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Amount</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  required
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Category & Date Row */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Source</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Category</label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white appearance-none cursor-pointer"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
-                    required
-                    type="text"
-                    placeholder="e.g. Google Salary"
-                    value={formData.source}
-                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Amount Field */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Amount</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    required
-                    type="number"
-                    placeholder="0.00"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Category & Date Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Category</label>
-                  <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white appearance-none cursor-pointer"
-                    >
-                      {CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Date</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-200 dark:hover:shadow-none"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className="pt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="flex-1 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-3 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-200 dark:hover:shadow-none"
+              >
+                {editingId ? 'Update' : 'Save'}
+              </button>
+            </div>
+          </form>
         </div>
-      )}
-    </div>
+        </div>
+  )
+}
+    </div >
   );
 };
 
