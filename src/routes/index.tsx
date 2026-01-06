@@ -5,6 +5,7 @@ import SidebarLayout from "../Components/SidebarLayout";
 import ExpenseManagement from "../pages/ExpenseManagement";
 import Analytics from "../pages/Analytics";
 import Insights from "../pages/Insights";
+import Goals from "../pages/Goals";
 
 const NewLogin = lazy(() => import("../pages/newLoging"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
@@ -68,6 +69,7 @@ export default function Router() {
             <Route path="/expenses" element={<RequiredAuth><ExpenseManagement /></RequiredAuth>} />
             <Route path="/analytics" element={<RequiredAuth><Analytics /></RequiredAuth>} />
             <Route path="/insights" element={<RequiredAuth><Insights /></RequiredAuth>} />
+            <Route path="/goals" element={<RequiredAuth><Goals /></RequiredAuth>} />
             
 
 

@@ -1,6 +1,7 @@
 
 export type IncomeCategory = 'Salary' | 'Freelance' | 'Investment' | 'Gift' | 'Other';
 export type ExpenseCategory = 'Rent' | 'Food' | 'Utilities' | 'Entertainment' | 'Health' | 'Travel' | 'Other';
+export type GoalCategory = 'Electronics' | 'Travel' | 'Education' | 'Finance' | 'Lifestyle' | 'Other';
 
 export interface IncomeRecord {
   id: string;
@@ -17,6 +18,15 @@ export interface ExpenseRecord {
   amount: number;
   date: string;
   category: ExpenseCategory;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  category: GoalCategory;
+  targetDate?: string;
 }
 
 export interface ChartDataPoint {

@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { LogOut, LayoutDashboard, Lightbulb, DollarSign, TrendingUp, PieChart } from "lucide-react";
+import { LogOut, LayoutDashboard, Lightbulb, DollarSign, TrendingUp, PieChart, Target } from "lucide-react";
 
 
 
@@ -103,6 +103,20 @@ export default function SidebarLayout({ onLogout }: any) {
             }
           >
             <Lightbulb size={18} /> Insights
+          </NavLink>
+          
+          {/* Goals */}
+          <NavLink
+            to="/goals"
+            className={({ isActive }) =>
+              `flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium transition 
+              ${isActive
+                ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+              }`
+            }
+          >
+            <Target size={18} /> Goals
           </NavLink>
 
         </nav>
