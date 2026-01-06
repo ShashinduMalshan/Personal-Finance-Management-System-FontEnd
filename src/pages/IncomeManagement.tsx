@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X, DollarSign, Calendar, Tag, FileText, Search, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, DollarSign, Calendar, Tag, FileText, Search, Filter, ChevronRight, ChevronLeft } from 'lucide-react';
 import ToggleSwitch from "../Components/ToggleSwitch"
 import { getIncomes } from '../services/income';
 
@@ -24,6 +24,10 @@ const IncomeManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(20);
+
 
   const [formData, setFormData] = useState<Omit<IncomeRecord, "id">>({
     source: "",
@@ -32,29 +36,30 @@ const IncomeManagement: React.FC = () => {
     category: "Salary"
   });
 
-const fetchIncomes = async (page: number = 1, limit: number = 20) => {
-  setLoading(true);
-  try {
-    const response = await getIncomes(page, limit);
+  const fetchIncomes = async (page: number = 1, limit: number = 8) => {
+    setLoading(true);
+    try {
+      const response = await getIncomes(page, limit);
 
-    const rawData = response.data.data || response.data;
+      const rawData: any[] = response.data || [];
 
-    const formattedData = rawData.map((item: any) => ({
-      ...item,
-      id: item._id, // map MongoDB _id to id
-      date: item.date ? item.date.split("T")[0] : ""
-    }));
 
-    setIncomes(formattedData);
+      const formattedData = rawData.map((item: any) => ({
+        ...item,
+        id: item._id,
+        date: item.date ? item.date.split("T")[0] : ""
+      }));
 
-    
-  } catch (error) {
-    console.error("Error fetching income records:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+      setIncomes(formattedData);
+      setCurrentPage(response.page || page);
+      setTotalPages(response.totalPages || 1);
 
+    } catch (error) {
+      console.error("Error fetching income records:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -80,23 +85,25 @@ const fetchIncomes = async (page: number = 1, limit: number = 20) => {
   };
 
 
-    const handleUpdate = async (e: React.FormEvent) => {
-      e.preventDefault();
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      try {
-        await fetch(`http://localhost:5000/api/v1/income/updateIncomeRecord/${editingId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
+    try {
+      console.log("Updating income with ID:", editingId, "Data:", formData);
 
-        await fetchIncomes();
-        setIsModalOpen(false);
-      } catch (error) {
-        console.error("Error updating income:", error);
-      }
-    };
-  
+      await fetch(`http://localhost:5000/api/v1/income/updateIncomeRecord/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      await fetchIncomes();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error updating income:", error);
+    }
+  };
+
 
 
   const handleDelete = async (id: string) => {
@@ -108,7 +115,7 @@ const fetchIncomes = async (page: number = 1, limit: number = 20) => {
         { method: "DELETE" }
       );
 
-      await fetchIncomes(); // 🔄 reload
+      await fetchIncomes();
     } catch (error) {
       console.error("Delete failed:", error);
     }
@@ -128,7 +135,7 @@ const fetchIncomes = async (page: number = 1, limit: number = 20) => {
         }
       );
 
-      await fetchIncomes(); // 🔄 reload
+      await fetchIncomes();
     } catch (error) {
       console.error("Failed to update autoAdd:", error);
     }
@@ -157,7 +164,13 @@ const fetchIncomes = async (page: number = 1, limit: number = 20) => {
   };
 
 
+  const handlePrevPage = () => {
+    if (currentPage > 1) fetchIncomes(currentPage - 1, itemsPerPage);
+  };
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) fetchIncomes(currentPage + 1, itemsPerPage);
+  };
 
 
   const filteredIncomes = incomes.filter(income =>
@@ -169,217 +182,267 @@ const fetchIncomes = async (page: number = 1, limit: number = 20) => {
 
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200 dark:shadow-none">
-          <h3 className="text-emerald-100 text-sm font-medium mb-1">Total Income</h3>
-          <div className="text-3xl font-bold flex items-baseline gap-1">
-            <span className="text-lg opacity-70">$</span>
-            {totalIncome.toLocaleString()}
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
-          <h3 className="text-gray-400 dark:text-gray-500 text-sm font-medium mb-1">Transactions</h3>
-          <div className="text-2xl font-bold text-gray-800 dark:text-white">{filteredIncomes.length}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <div>
-            <h3 className="text-gray-400 dark:text-gray-500 text-sm font-medium mb-1">Top Category</h3>
-            <div className="text-xl font-bold text-gray-800 dark:text-white">Salary</div>
-          </div>
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-full text-emerald-500">
-            <Tag size={20} />
-          </div>
-        </div>
-      </div>
-
-      {/* Controls & Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <FileText className="text-emerald-500" size={20} />
-            Income Records
-          </h2>
-
-          <div className="flex gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search sources..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border-none rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
-              />
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+      <div className="p-6 space-y-6 animate-fade-in">
+        {/* Header Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200 dark:shadow-none">
+            <h3 className="text-emerald-100 text-sm font-medium mb-1">Total Income</h3>
+            <div className="text-3xl font-bold flex items-baseline gap-1">
+              <span className="text-lg opacity-70">$</span>
+              {totalIncome.toLocaleString()}
             </div>
-            <button
-              onClick={() => handleOpenModal()}
-              className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all transform active:scale-95"
-            >
-              <Plus size={16} /> Add Income
-            </button>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+            <h3 className="text-gray-400 dark:text-gray-500 text-sm font-medium mb-1">Transactions</h3>
+            <div className="text-2xl font-bold text-gray-800 dark:text-white">{filteredIncomes.length}</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div>
+              <h3 className="text-gray-400 dark:text-gray-500 text-sm font-medium mb-1">Top Category</h3>
+              <div className="text-xl font-bold text-gray-800 dark:text-white">Salary</div>
+            </div>
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-full text-emerald-500">
+              <Tag size={20} />
+            </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-            <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-700">
-              <tr>
-                <th className="px-6 py-4">Source</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4 text-right">Amount</th>
-                <th className="px-6 py-4 text-center">Actions</th>
-                <th className="px-2 py-4 text-center">Auto Add</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {filteredIncomes.length === 0 ? (
+        {/* Controls & Table */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <FileText className="text-emerald-500" size={20} />
+              Income Records
+            </h2>
+
+            <div className="flex gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search sources..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border-none rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                />
+              </div>
+              <button
+                onClick={() => handleOpenModal()}
+                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all transform active:scale-95"
+              >
+                <Plus size={16} /> Add Income
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+              <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-700">
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
-                    No records found. Add some income!
-                  </td>
+                  <th className="px-6 py-4">Source</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                  <th className="px-6 py-4 text-center">Actions</th>
+                  <th className="px-2 py-4 text-center">Auto Add</th>
                 </tr>
-              ) : (
-                filteredIncomes.map((income) => (
-                  <tr key={income.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-800 dark:text-white">{income.source}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium 
-                        ${income.category === 'Salary' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
-                          income.category === 'Freelance' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
-                            income.category === 'Gift' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400' :
-                              'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
-                        {income.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-500">{income.date}</td>
-                    <td className="px-6 py-4 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                      +RS {Number(income.amount).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => handleOpenModal(income)} className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors">
-                          <Edit2 size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(income.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-2 py-4 text-center">
-                      <ToggleSwitch
-                        value={income.autoAdd || false}
-                        onChange={() => handleToggleAutoAdd(income.id, income.autoAdd || false)}
-                      />
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {filteredIncomes.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                      No records found. Add some income!
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredIncomes.map((income) => (
+                    <tr key={income.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-800 dark:text-white">{income.source}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium 
+                        ${income.category === 'Salary' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                            income.category === 'Freelance' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
+                              income.category === 'Gift' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400' :
+                                'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                          {income.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">{income.date}</td>
+                      <td className="px-6 py-4 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        +RS {Number(income.amount).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => handleOpenModal(income)} className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors">
+                            <Edit2 size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(income.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-2 py-4 text-center">
+                        <ToggleSwitch
+                          value={income.autoAdd || false}
+                          onChange={() => handleToggleAutoAdd(income.id, income.autoAdd || false)}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* --- Pagination Controls --- */}
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Showing page <span className="font-semibold text-gray-900 dark:text-white">{currentPage}</span> of <span className="font-semibold text-gray-900 dark:text-white">{totalPages}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1 || loading}
+              className="p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            {/* Page Number Indicators */}
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(pNum =>
+                  // Logic to show only relevant pages if you have many
+                  pNum === 1 || pNum === totalPages || Math.abs(currentPage - pNum) <= 1
+                )
+                .map((pNum) => (
+                  <button
+                    key={pNum}
+                    onClick={() => setCurrentPage(pNum)}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors
+                       ${currentPage === pNum
+                        ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200 dark:shadow-none'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                  >
+                    {pNum}
+                  </button>
+                ))}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || loading}
+              className="p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Modal Overlay */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                {editingId ? 'Edit Income' : 'Add New Income'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={editingId ? handleUpdate : handleSave} className="p-6 space-y-4">
-            {/* Source Field */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Source</label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g. Google Salary"
-                  value={formData.source}
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
-                />
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+              <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                  {editingId ? 'Edit Income' : 'Add New Income'}
+                </h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                  <X size={24} />
+                </button>
               </div>
-            </div>
 
-            {/* Amount Field */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Amount</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  required
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
-                />
-              </div>
-            </div>
+              <form onSubmit={editingId ? handleUpdate : handleSave} className="p-6 space-y-4">
+                {/* Source Field */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Source</label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      required
+                      type="text"
+                      placeholder="e.g. Google Salary"
+                      value={formData.source}
+                      onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
+                    />
+                  </div>
+                </div>
 
-            {/* Category & Date Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Category</label>
-                <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white appearance-none cursor-pointer"
+                {/* Amount Field */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Amount</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      required
+                      type="number"
+                      placeholder="0.00"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Category & Date Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Category</label>
+                    <div className="relative">
+                      <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white appearance-none cursor-pointer"
+                      >
+                        {CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Date</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                   >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-200 dark:hover:shadow-none"
+                  >
+                    {editingId ? 'Update' : 'Save'}
+                  </button>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-none focus:ring-2 focus:ring-emerald-500 text-gray-700 dark:text-white"
-                  />
-                </div>
-              </div>
+              </form>
             </div>
-
-            <div className="pt-4 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-3 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-200 dark:hover:shadow-none"
-              >
-                {editingId ? 'Update' : 'Save'}
-              </button>
-            </div>
-          </form>
-        </div>
-        </div>
-  )
-}
+          </div>
+        )
+      }
     </div >
   );
 };

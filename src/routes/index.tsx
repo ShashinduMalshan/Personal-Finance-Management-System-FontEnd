@@ -2,6 +2,9 @@ import { lazy, Suspense, useState, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import SidebarLayout from "../Components/SidebarLayout";
+import ExpenseManagement from "../pages/ExpenseManagement";
+import Analytics from "../pages/Analytics";
+import Insights from "../pages/Insights";
 
 const NewLogin = lazy(() => import("../pages/newLoging"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
@@ -62,6 +65,10 @@ export default function Router() {
               }
             />
             <Route path="/income" element={<RequiredAuth><Income /></RequiredAuth>} />
+            <Route path="/expenses" element={<RequiredAuth><ExpenseManagement /></RequiredAuth>} />
+            <Route path="/analytics" element={<RequiredAuth><Analytics /></RequiredAuth>} />
+            <Route path="/insights" element={<RequiredAuth><Insights /></RequiredAuth>} />
+            
 
 
           </Route>
