@@ -1,39 +1,40 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Edit2, Trash2, X, DollarSign, Calendar, FileText, Search, Loader2, TrendingDown, CreditCard, ChevronLeft, ChevronRight, Filter, Tag } from 'lucide-react';
+import { createExpense, getExpenses, updateExpense ,deleteExpense } from '../services/expenses';
 // import { getExpenses, createExpense, updateExpense, deleteExpense } from '../services/expense';
 
 
 export interface User {
-  id: string;
-  name: string;
-  email: string;
+    id: string;
+    name: string;
+    email: string;
 }
 
 export type IncomeCategory = 'Salary' | 'Freelance' | 'Investment' | 'Gift' | 'Other';
 export type ExpenseCategory = 'Rent' | 'Food' | 'Utilities' | 'Entertainment' | 'Health' | 'Travel' | 'Other';
 
 export interface IncomeRecord {
-  id: string;
-  source: string;
-  amount: number;
-  date: string;
-  category: IncomeCategory;
-  autoAdd?: boolean;
+    id: string;
+    source: string;
+    amount: number;
+    date: string;
+    category: IncomeCategory;
+    autoAdd?: boolean;
 }
 
 export interface ExpenseRecord {
-  id: string;
-  description: string;
-  amount: number;
-  date: string;
-  category: ExpenseCategory;
+    id: string;
+    description: string;
+    amount: number;
+    date: string;
+    category: ExpenseCategory;
 }
 
 export interface ChartDataPoint {
-  label: string;
-  value: number;
-  color?: string;
+    label: string;
+    value: number;
+    color?: string;
 }
 
 const CATEGORIES: ExpenseCategory[] = ['Rent', 'Food', 'Utilities', 'Entertainment', 'Health', 'Travel', 'Other'];
@@ -55,31 +56,46 @@ const ExpenseManagement: React.FC = () => {
         category: "Food"
     });
 
-    const fetchExpenses = useCallback(async (page: number = 1) => {
+
+    const fetchExpenses = async (page: number = 1, limit: number = 8) => {
         setLoading(true);
         try {
-            // const response = await getExpenses(page, itemsPerPage);
-            // setExpenses(response.data);
-            // setCurrentPage(response.page);
-            // setTotalPages(response.totalPages);
+            const response = await getExpenses(page, limit);
+
+            const rawData: any[] = response.data || [];
+
+
+            const formattedData = rawData.map((item: any) => ({
+                ...item,
+                id: item._id,
+                date: item.date ? item.date.split("T")[0] : ""
+            }));
+
+            setExpenses(formattedData);
+            setCurrentPage(response.page || page);
+            setTotalPages(response.totalPages || 1);
+
         } catch (error) {
             console.error("Error fetching expense records:", error);
         } finally {
             setLoading(false);
         }
-    }, [itemsPerPage]);
+    };
+
+
 
     useEffect(() => {
-        fetchExpenses(1);
-    }, [fetchExpenses]);
+        fetchExpenses();
+    }, []);
 
     const handleSave = async (e: React.FormEvent) => {
+
         e.preventDefault();
         try {
             if (editingId) {
-                // await updateExpense(editingId, formData);
+                await updateExpense(editingId, formData);
             } else {
-                // await createExpense(formData);
+                await createExpense(formData);
             }
             await fetchExpenses(currentPage);
             setIsModalOpen(false);
@@ -91,7 +107,7 @@ const ExpenseManagement: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this record?")) return;
         try {
-            // await deleteExpense(id);
+            await deleteExpense(id);
             await fetchExpenses(currentPage);
         } catch (error) {
             console.error("Delete failed:", error);
@@ -261,97 +277,97 @@ const ExpenseManagement: React.FC = () => {
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-                            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                                    {editingId ? 'Edit Expense' : 'Add New Expense'}
-                                </h3>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                >
-                                    <X size={24} />
-                                </button>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                                {editingId ? 'Edit Expense' : 'Add New Expense'}
+                            </h3>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSave} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase">Description</label>
+                                <div className="relative">
+                                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white"
+                                    />
+                                </div>
                             </div>
 
-                            <form onSubmit={handleSave} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase">Amount</label>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        required
+                                        type="number"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase">Description</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase">Category</label>
                                     <div className="relative">
-                                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        <select
+                                            value={formData.category}
+                                            onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white appearance-none cursor-pointer"
+                                        >
+                                            {CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase">Date</label>
+                                    <div className="relative">
+                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
-                                            required
-                                            type="text"
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            type="date"
+                                            value={formData.date}
+                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                             className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white"
                                         />
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase">Amount</label>
-                                    <div className="relative">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                        <input
-                                            required
-                                            type="number"
-                                            value={formData.amount}
-                                            onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Category</label>
-                                        <div className="relative">
-                                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                            <select
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                                                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white appearance-none cursor-pointer"
-                                            >
-                                                {CATEGORIES.map(cat => (
-                                                    <option key={cat} value={cat}>{cat}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Date</label>
-                                        <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                            <input
-                                                type="date"
-                                                value={formData.date}
-                                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-700 dark:text-white"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 py-3 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition shadow-lg hover:shadow-red-100 dark:shadow-none"
-                                    >
-                                        {editingId ? 'Update' : 'Save'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-            </div>
-    )}
+                            <div className="pt-4 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="flex-1 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-3 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition shadow-lg hover:shadow-red-100 dark:shadow-none"
+                                >
+                                    {editingId ? 'Update' : 'Save'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

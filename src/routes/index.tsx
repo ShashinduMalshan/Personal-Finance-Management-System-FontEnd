@@ -50,7 +50,8 @@ export default function Router() {
           <Route path="/newlogin" element={<NewLogin />} />
 
           {/* Protected layout */}
-          <Route element={<SidebarLayout />}>
+        <Route element={<SidebarLayout onLogout={() => console.log("Logging out...")} user={user?.username || "Guest"} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />}>
+          
 
             <Route
               path="/dashboard"

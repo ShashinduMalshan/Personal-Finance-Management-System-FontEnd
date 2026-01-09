@@ -37,23 +37,30 @@ const Goals: React.FC = () => {
     targetDate: ''
   });
 
-  const fetchData = async () => {
-    setLoading(true);
-    // const [goalRes, incRes, expRes] = await Promise.all([
-    // //   getGoals(),
-    //   getIncomes(1, 100),
-    //   getExpenses(1, 100)
-    // ]);
-    
-    // setGoals(goalRes);
-    
-    // Simple average calculation for surplus
-    // const totalInc = incRes.data.reduce((sum, i) => sum + i.amount, 0);
-    // const totalExp = expRes.data.reduce((sum, e) => sum + e.amount, 0);
-    // setMonthlyIncome(totalInc);
-    // setMonthlyExpense(totalExp);
+ const fetchData = async () => {
+  setLoading(true);
+  try {
+    const [goalRes, incRes, expRes] = await Promise.all([
+      getGoals(),           // Fetch all goals
+      getIncomes(1, 100),   // Fetch last 100 incomes
+      getExpenses(1, 100)   // Fetch last 100 expenses
+    ]);
+
+    setGoals(goalRes);
+
+    // Calculate monthly surplus
+    const totalInc = incRes.data.reduce((sum, i) => sum + i.amount, 0);
+    const totalExp = expRes.data.reduce((sum, e) => sum + e.amount, 0);
+
+    setMonthlyIncome(totalInc);
+    setMonthlyExpense(totalExp);
+  } catch (err) {
+    console.error(err);
+  } finally {
     setLoading(false);
-  };
+  }
+};
+
 
   useEffect(() => {
     fetchData();

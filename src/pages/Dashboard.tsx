@@ -159,44 +159,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, isDarkMode, toggl
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         {/* Top Header */}
-        <header className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 border-b border-gray-50 dark:border-gray-700 sticky top-0 z-30 transition-colors duration-300">
-            <div className="flex items-center gap-4 md:hidden">
-                <Menu className="text-gray-400" />
-                <div className="w-8 h-8 border-2 border-emerald-500 rounded flex items-center justify-center text-xs text-emerald-500 font-bold">D</div>
-            </div>
-
-            <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-800 dark:text-white">Welcome back, {user}!</h1>
-                <p className="text-sm text-gray-400 dark:text-gray-500 font-light">Here's what's happening with your store today.</p>
-            </div>
-
-            <div className="flex items-center gap-6">
-                 {/* Dark Mode Toggle */}
-                <button 
-                  onClick={toggleTheme} 
-                  className="p-2 rounded-full text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition"
-                  title="Toggle Theme"
-                >
-                  {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-
-                <div className="relative hidden sm:block">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-500 h-4 w-4" />
-                    <input 
-                      type="text" 
-                      placeholder="Search..." 
-                      className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-full text-sm text-gray-600 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-300 w-64 transition-colors" 
-                    />
-                </div>
-                <button className="relative text-gray-400 hover:text-emerald-500 transition">
-                    <Bell size={20} />
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-400 rounded-full border-2 border-white dark:border-gray-800"></span>
-                </button>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-200 dark:shadow-none">
-                    {user.charAt(0).toUpperCase()}
-                </div>
-            </div>
-        </header>
+        
 
         {/* Dashboard Content */}
         <div className="p-6 space-y-6">
