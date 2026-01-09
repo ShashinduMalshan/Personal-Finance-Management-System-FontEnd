@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Target, Plus, X, Laptop, Plane, BookOpen, Wallet, ShoppingBag, Calendar, DollarSign, TrendingUp, Info, AlertCircle, CheckCircle2, MoreHorizontal, Trash2, Edit2 } from 'lucide-react';
-// import { getGoals, createGoal, updateGoal, deleteGoal } from '../services/goals';
+import { getGoals , createGoal ,deleteGoal ,updateGoal} from '../services/goals';
 import { getExpenses } from '../services/expenses';
 import { getIncomes } from '../services/income';
 import type { Goal, GoalCategory } from '../types';
@@ -46,11 +46,11 @@ const Goals: React.FC = () => {
       getExpenses(1, 100)   // Fetch last 100 expenses
     ]);
 
-    setGoals(goalRes);
+    setGoals(goalRes.data);
 
     // Calculate monthly surplus
-    const totalInc = incRes.data.reduce((sum, i) => sum + i.amount, 0);
-    const totalExp = expRes.data.reduce((sum, e) => sum + e.amount, 0);
+    const totalInc = incRes.data.reduce((sum: any, i: { amount: any; }) => sum + i.amount, 0);
+    const totalExp = expRes.data.reduce((sum: any, e: { amount: any; }) => sum + e.amount, 0);
 
     setMonthlyIncome(totalInc);
     setMonthlyExpense(totalExp);
@@ -69,9 +69,9 @@ const Goals: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-    //   await updateGoal(editingId, formData);
+      await updateGoal(editingId, formData);
     } else {
-    //   await createGoal(formData);
+      await createGoal(formData);
     }
     await fetchData();
     setIsModalOpen(false);
@@ -161,7 +161,7 @@ const Goals: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Net Surplus Velocity</span>
-          <div className="text-4xl font-black text-emerald-500 mt-2">${netSurplus.toLocaleString()}<span className="text-sm text-gray-400 font-bold ml-1">/mo</span></div>
+          <div className="text-4xl font-black text-emerald-500 mt-2">RS {netSurplus.toLocaleString()}<span className="text-sm text-gray-400 font-bold ml-1">/mo</span></div>
           <p className="text-[11px] text-gray-400 font-bold uppercase mt-4 tracking-wider">Available for goal allocation</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700">
@@ -172,7 +172,7 @@ const Goals: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Capital Needed</span>
           <div className="text-4xl font-black text-gray-800 dark:text-white mt-2">
-            ${goals.reduce((acc, g) => acc + (g.targetAmount - g.currentAmount), 0).toLocaleString()}
+            RS {goals.reduce((acc, g) => acc + (g.targetAmount - g.currentAmount), 0).toLocaleString()}
           </div>
           <p className="text-[11px] text-gray-400 font-bold uppercase mt-4 tracking-wider">Aggregate remaining balance</p>
         </div>
@@ -238,7 +238,7 @@ const Goals: React.FC = () => {
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Required Save</span>
                   <span className="text-base font-black text-gray-800 dark:text-white">
-                    {goal.monthlyRequired > 0 ? `$${goal.monthlyRequired.toFixed(0)}` : '--'}
+                    {goal.monthlyRequired > 0 ? `RS ${goal.monthlyRequired.toFixed(0)}` : '--'}
                     <span className="text-[10px] text-gray-400 ml-1">/mo</span>
                   </span>
                 </div>
