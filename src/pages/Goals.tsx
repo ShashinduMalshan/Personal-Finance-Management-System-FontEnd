@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Target, Plus, X, Laptop, Plane, BookOpen, Wallet, ShoppingBag, Calendar, DollarSign, TrendingUp, Info, AlertCircle, CheckCircle2, MoreHorizontal, Trash2, Edit2 } from 'lucide-react';
-import { getGoals , createGoal ,deleteGoal ,updateGoal} from '../services/goals';
+import { getGoals, createGoal, deleteGoal, updateGoal } from '../services/goals';
 import { getExpenses } from '../services/expenses';
 import { getIncomes } from '../services/income';
 import type { Goal, GoalCategory } from '../types';
@@ -24,7 +24,7 @@ const Goals: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   // Data for impact calculations
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpense, setMonthlyExpense] = useState(0);
@@ -37,29 +37,34 @@ const Goals: React.FC = () => {
     targetDate: ''
   });
 
- const fetchData = async () => {
-  setLoading(true);
-  try {
-    const [goalRes, incRes, expRes] = await Promise.all([
-      getGoals(),           // Fetch all goals
-      getIncomes(1, 100),   // Fetch last 100 incomes
-      getExpenses(1, 100)   // Fetch last 100 expenses
-    ]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [goalRes, incRes, expRes] = await Promise.all([
+        getGoals(),           // Fetch all goals
+        getIncomes(1, 100),   // Fetch last 100 incomes
+        getExpenses(1, 100)   // Fetch last 100 expenses
+      ]);
 
-    setGoals(goalRes.data);
+      const goalsWithId = goalRes.data.map((g: any) => ({
+        ...g,
+        id: g.id || g._id
+      }));
 
-    // Calculate monthly surplus
-    const totalInc = incRes.data.reduce((sum: any, i: { amount: any; }) => sum + i.amount, 0);
-    const totalExp = expRes.data.reduce((sum: any, e: { amount: any; }) => sum + e.amount, 0);
+      setGoals(goalsWithId);
 
-    setMonthlyIncome(totalInc);
-    setMonthlyExpense(totalExp);
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+      // Calculate monthly surplus
+      const totalInc = incRes.data.reduce((sum: any, i: { amount: any; }) => sum + i.amount, 0);
+      const totalExp = expRes.data.reduce((sum: any, e: { amount: any; }) => sum + e.amount, 0);
+
+      setMonthlyIncome(totalInc);
+      setMonthlyExpense(totalExp);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -68,6 +73,7 @@ const Goals: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (editingId) {
       await updateGoal(editingId, formData);
     } else {
@@ -77,9 +83,10 @@ const Goals: React.FC = () => {
     setIsModalOpen(false);
   };
 
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this goal?")) return;
-    // await deleteGoal(id);
+    await deleteGoal(id);
     await fetchData();
   };
 
@@ -106,7 +113,7 @@ const Goals: React.FC = () => {
     return goals.map(goal => {
       const remaining = goal.targetAmount - goal.currentAmount;
       const progress = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
-      
+
       let monthlyRequired = 0;
       let status: 'on-track' | 'delayed' | 'completed' = 'on-track';
       let message = '';
@@ -118,7 +125,7 @@ const Goals: React.FC = () => {
         const targetDate = new Date(goal.targetDate);
         const today = new Date();
         const monthsLeft = (targetDate.getFullYear() - today.getFullYear()) * 12 + (targetDate.getMonth() - today.getMonth());
-        
+
         if (monthsLeft > 0) {
           monthlyRequired = remaining / monthsLeft;
           // If required savings is more than 50% of surplus, mark as delayed
@@ -149,7 +156,7 @@ const Goals: React.FC = () => {
             Architect your financial future. Define targets, track accumulation velocity, and visualize the impact of your spending habits on long-term acquisitions.
           </p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
           className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all shadow-xl shadow-emerald-500/10 active:scale-95 flex items-center gap-3 shrink-0"
         >
@@ -197,38 +204,36 @@ const Goals: React.FC = () => {
           <div key={goal.id} className="bg-white dark:bg-gray-800 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden group hover:shadow-xl hover:translate-y-[-4px] transition-all flex flex-col h-full">
             <div className="p-8 pb-4">
               <div className="flex justify-between items-start mb-6">
-                <div className={`p-4 rounded-2xl shadow-lg ${
-                  goal.status === 'completed' ? 'bg-emerald-500 text-white' :
+                <div className={`p-4 rounded-2xl shadow-lg ${goal.status === 'completed' ? 'bg-emerald-500 text-white' :
                   goal.status === 'delayed' ? 'bg-red-500 text-white' : 'bg-gray-50 dark:bg-gray-700 text-emerald-500'
-                }`}>
+                  }`}>
                   <GoalIcon category={goal.category} size={24} />
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button onClick={() => handleOpenModal(goal as Goal)} className="p-2 text-gray-400 hover:text-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-xl transition-all"><Edit2 size={16} /></button>
-                   <button onClick={() => handleDelete(goal.id)} className="p-2 text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-gray-700 rounded-xl transition-all"><Trash2 size={16} /></button>
+                  <button onClick={() => handleOpenModal(goal as Goal)} className="p-2 text-gray-400 hover:text-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-xl transition-all"><Edit2 size={16} /></button>
+                  <button onClick={() => handleDelete(goal.id)} className="p-2 text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-gray-700 rounded-xl transition-all"><Trash2 size={16} /></button>
                 </div>
               </div>
-              
+
               <h3 className="text-xl font-black text-gray-800 dark:text-white mb-1">{goal.name}</h3>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{goal.category}</p>
 
               <div className="mt-8 space-y-2">
                 <div className="flex justify-between items-end">
-                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Capital Accumulation</span>
-                   <span className="text-sm font-black text-gray-800 dark:text-white">{goal.progress.toFixed(0)}%</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Capital Accumulation</span>
+                  <span className="text-sm font-black text-gray-800 dark:text-white">{goal.progress.toFixed(0)}%</span>
                 </div>
                 <div className="w-full bg-gray-50 dark:bg-gray-900 h-3 rounded-full overflow-hidden border border-gray-100 dark:border-gray-700">
-                  <div 
-                    className={`h-full transition-all duration-[2s] ease-out rounded-full ${
-                      goal.status === 'completed' ? 'bg-emerald-500' :
+                  <div
+                    className={`h-full transition-all duration-[2s] ease-out rounded-full ${goal.status === 'completed' ? 'bg-emerald-500' :
                       goal.status === 'delayed' ? 'bg-red-500' : 'bg-emerald-400'
-                    }`}
+                      }`}
                     style={{ width: `${goal.progress}%` }}
                   ></div>
                 </div>
                 <div className="flex justify-between mt-2">
-                   <span className="text-xs font-bold text-emerald-500">${goal.currentAmount.toLocaleString()}</span>
-                   <span className="text-xs font-bold text-gray-400">${goal.targetAmount.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-emerald-500">${goal.currentAmount.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-gray-400">${goal.targetAmount.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -242,15 +247,14 @@ const Goals: React.FC = () => {
                     <span className="text-[10px] text-gray-400 ml-1">/mo</span>
                   </span>
                 </div>
-                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 ${
-                  goal.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 ${goal.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
                   goal.status === 'delayed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                }`}>
+                  }`}>
                   {goal.status === 'completed' ? <CheckCircle2 size={12} /> : goal.status === 'delayed' ? <AlertCircle size={12} /> : <TrendingUp size={12} />}
                   {goal.status.replace('-', ' ')}
                 </div>
               </div>
-              
+
               {goal.targetDate && (
                 <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   <Calendar size={12} /> Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
@@ -277,7 +281,7 @@ const Goals: React.FC = () => {
                   <input required type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full pl-12 pr-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-gray-800 dark:text-white" placeholder="e.g. New Workstation" />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Target Amount</label>
