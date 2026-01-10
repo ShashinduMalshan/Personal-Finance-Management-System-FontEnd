@@ -40,3 +40,15 @@ export interface User {
   name: string;
   email: string;
 }
+
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  status?: 'Active' | 'Inactive' | 'Pending';
+  lastLogin?: string;
+  avatar?: string;
+}

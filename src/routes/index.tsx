@@ -7,6 +7,7 @@ import Analytics from "../pages/Analytics";
 import Insights from "../pages/Insights";
 import Goals from "../pages/Goals";
 
+
 const NewLogin = lazy(() => import("../pages/newLoging"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 const Income = lazy(() => import("../pages/IncomeManagement"));
@@ -71,6 +72,7 @@ export default function Router() {
             <Route path="/analytics" element={<RequiredAuth><Analytics /></RequiredAuth>} />
             <Route path="/insights" element={<RequiredAuth><Insights /></RequiredAuth>} />
             <Route path="/goals" element={<RequiredAuth><Goals /></RequiredAuth>} />
+            {/* <Route path="/profile" element={<RequiredAuth><Profile /></RequiredAuth>} /> */}
             
 
 

@@ -15,6 +15,26 @@ interface DashboardProps {
   toggleTheme: () => void;
 }
 
+const statColorMap = {
+  emerald: {
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-500'
+  },
+  blue: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-500'
+  },
+  orange: {
+    bg: 'bg-orange-50',
+    text: 'text-orange-500'
+  },
+  purple: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-500'
+  }
+};
+
+
 const SimpleBarChart: React.FC<{ data: ChartDataPoint[] }> = ({ data }) => {
   const maxValue = Math.max(...data.map(d => d.value));
   
@@ -110,7 +130,7 @@ const SimpleDonutChart: React.FC<{ data: ChartDataPoint[] }> = ({ data }) => {
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, isDarkMode, toggleTheme }) => {
+const Dashboard: React.FC<DashboardProps> = ({  }) => {
   const revenueData = [
     { label: 'Jan', value: 35, color: 'bg-emerald-300' },
     { label: 'Feb', value: 45, color: 'bg-emerald-400' },

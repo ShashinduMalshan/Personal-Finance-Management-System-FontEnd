@@ -7,6 +7,7 @@ import {
   TrendingUp,
   PieChart,
   Target,
+  User,
 } from "lucide-react";
 import Header from "./header";
 
@@ -17,11 +18,23 @@ interface SidebarLayoutProps {
   onLogout: () => void;
 }
 
+const onLogout = () => {
+  // 1️⃣ Remove stored auth data
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  // 2️⃣ Optional: clear sessionStorage
+  sessionStorage.clear();
+
+  // 3️⃣ Redirect to login
+  window.location.href = "/newlogin";
+};
+
+
 export default function SidebarLayout({
   user,
   isDarkMode,
   toggleTheme,
-  onLogout,
 }: SidebarLayoutProps) {
 
   const navItemClass = ({ isActive }: { isActive: boolean }) =>
@@ -69,11 +82,6 @@ export default function SidebarLayout({
             Analytics
           </NavLink>
 
-          <NavLink to="/revenue" className={navItemClass}>
-            <DollarSign size={18} />
-            Revenue
-          </NavLink>
-
           <NavLink to="/insights" className={navItemClass}>
             <Lightbulb size={18} />
             Insights
@@ -83,6 +91,11 @@ export default function SidebarLayout({
             <Target size={18} />
             Goals
           </NavLink>
+          
+          {/* <NavLink to="/profile" className={navItemClass}>
+            <User size={18} />
+            Profile
+          </NavLink> */}
 
         </nav>
 
