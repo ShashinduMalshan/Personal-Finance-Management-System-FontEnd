@@ -1,73 +1,159 @@
-# React + TypeScript + Vite
+# 💰 Personal Finance Management System – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern and responsive **Personal Finance Management System (PFMS)** built using **React, TypeScript, and Vite**. This application helps users manage income, expenses, savings goals, and financial analytics with interactive dashboards and AI-powered insights.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+* 🔐 User Authentication (Login / Profile Management)
+* 📊 Interactive Dashboard Overview
+* 💵 Income Management
+* 💳 Expense Management
+* 🎯 Financial Goals Tracking
+* 📈 Analytics & Charts Visualization
+* 🤖 AI Insights (Gemini Integration)
+* 🌙 Modern UI with Sidebar Layout
+* 🔄 API Integration with Backend Services
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* **Frontend Framework:** React + TypeScript
+* **Build Tool:** Vite
+* **State Management:** Context API
+* **Routing:** React Router
+* **Charts & Analytics:** Custom Chart Components
+* **API Handling:** Axios (via services layer)
+* **Linting:** ESLint
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📁 Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+ ├── Components/        # Reusable UI components
+ ├── pages/             # Main application pages
+ ├── services/          # API service layer
+ ├── context/           # Authentication context
+ ├── routes/            # Application routing
+ ├── assets/            # Images & static assets
+ ├── types.ts           # Type definitions
+ ├── App.tsx            # Root component
+ └── main.tsx           # Application entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## ⚙️ Installation & Setup
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1️⃣ Clone the Repository
+
+```bash
+git clone <your-repository-url>
+cd Personal-Finance-Management-System-FontEnd
 ```
+
+### 2️⃣ Install Dependencies
+
+```bash
+npm install
+```
+
+### 3️⃣ Setup Environment Variables
+
+Create a `.env` file in the root directory and configure:
+
+```
+VITE_API_BASE_URL=your_backend_api_url
+VITE_GEMINI_API_KEY=your_gemini_api_key
+```
+
+### 4️⃣ Run the Development Server
+
+```bash
+npm run dev
+```
+
+The app will run on:
+
+```
+http://localhost:5173
+```
+
+---
+
+## 🏗️ Build for Production
+
+```bash
+npm run build
+```
+
+To preview production build:
+
+```bash
+npm run preview
+```
+
+---
+
+## 🔌 API Integration
+
+All API calls are handled inside the `services/` directory:
+
+* `api.ts` – Base API configuration
+* `auth.ts` – Authentication APIs
+* `income.ts` – Income management
+* `expenses.ts` – Expense management
+* `goals.ts` – Goal tracking
+* `user.ts` – User management
+* `geminiService.ts` – AI financial insights
+
+---
+
+## 📊 Main Pages
+
+* **Dashboard** – Overview of financial summary
+* **Income Management** – Add & manage income records
+* **Expense Management** – Track daily expenses
+* **Goals** – Manage savings goals
+* **Analytics** – Visual financial analysis
+* **Insights** – AI-based recommendations
+* **Profile** – User account details
+
+---
+
+## 🔐 Authentication
+
+Authentication is handled using:
+
+* Auth Context (`authContext.tsx`)
+* Token-based API communication
+
+---
+
+## 🎯 Future Improvements
+
+* Dark mode support
+* Advanced financial forecasting
+* Export reports (PDF/Excel)
+* Budget limit alerts
+* Multi-user financial comparison
+
+---
+
+## 👨‍💻 Author
+
+**Shasidu Malshan Fernando**
+Graduate Diploma in Software Engineering
+IJSE – Institute of Software Engineering
+
+---
+
+## 📄 License
+
+This project is for educational and portfolio purposes.
+
+---
