@@ -112,6 +112,11 @@ All API calls are handled inside the `services/` directory:
 * `geminiService.ts` – AI financial insights
 
 ---
+## 🔗 Backend Repository
+
+The backend for this project is developed using Spring Boot and handles authentication, financial data management, and AI integration.
+
+👉 Backend Repository: [Backend Repository](https://github.com/ShashinduMalshan/Personal-Finance-Management-System-BackEnd)
 
 ## 📊 Main Pages
 
